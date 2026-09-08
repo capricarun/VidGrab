@@ -137,7 +137,7 @@ echo
 echo "  Bookmark your permanent link instead of the address above —"
 echo "  it survives restarts and follows the tunnel wherever it moves:"
 echo
-echo "      https://capricarun.github.io/vidgrab/"
+echo "      https://capricarun.github.io/VidGrab/"
 echo
 echo "  Done. You never need Terminal again."
 echo

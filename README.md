@@ -33,7 +33,7 @@ That creates a private Python environment, downloads the Cloudflare tunnel
 client, asks you to choose a passphrase, and installs a LaunchAgent so VidGrab
 starts itself at every login.
 
-After it finishes, bookmark **<https://capricarun.github.io/vidgrab/>** and never
+After it finishes, bookmark **<https://capricarun.github.io/VidGrab/>** and never
 open Terminal again. The launcher page checks where the tunnel currently is and
 forwards you there; your passphrase is asked once per device and remembered in
 that browser.
