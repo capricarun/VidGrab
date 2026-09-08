@@ -1,0 +1,8 @@
+.venv/
+bin/
+logs/
+Downloads/
+.vidgrab.env
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VidGrab</title>
+<style>
+  :root{
+    --bg:#0c0d10; --panel:#141619; --panel2:#1a1d21; --line:#25292f;
+    --tx:#e8eaed; --dim:#8b929c; --dim2:#5f666f;
+    --acc:#5b8cff; --acc2:#7aa2ff; --ok:#3ecf8e; --err:#ff6b6b;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--tx);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(900px 500px at 50% -12%,rgba(91,140,255,.13),transparent 70%);
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:44px 22px 90px}
+
+  header{display:flex;align-items:center;gap:11px;margin-bottom:30px}
+  .logo{width:32px;height:32px;border-radius:9px;flex:none;
+    background:linear-gradient(145deg,var(--acc),#a06bff);
+    display:grid;place-items:center;box-shadow:0 5px 18px rgba(91,140,255,.35)}
+  .logo svg{width:16px;height:16px;fill:#fff}
+  h1{font-size:17px;font-weight:650;margin:0;letter-spacing:-.2px}
+  .sub{font-size:12px;color:var(--dim2);margin-top:1px}
+  .env{margin-left:auto;font-size:11px;color:var(--dim2);text-align:right;line-height:1.45}
+  .env b{color:var(--dim);font-weight:500}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+
+  /* input */
+  .bar{display:flex;gap:9px;align-items:center;padding:7px 7px 7px 15px;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    transition:border-color .18s,box-shadow .18s}
+  .bar:focus-within{border-color:#3a4a75;box-shadow:0 0 0 3px rgba(91,140,255,.13)}
+  .bar svg.link{width:15px;height:15px;fill:var(--dim2);flex:none}
+  #url{flex:1;background:none;border:0;outline:0;color:var(--tx);font-size:14.5px;
+    padding:10px 0;font-family:inherit;min-width:0}
+  #url::placeholder{color:var(--dim2)}
+  button{font-family:inherit;cursor:pointer;border:0;transition:.15s}
+  .btn{background:var(--acc);color:#fff;border-radius:9px;padding:10px 17px;
+    font-size:13.5px;font-weight:600;white-space:nowrap}
+  .btn:hover{background:var(--acc2)}
+  .btn:disabled{background:#2a2f38;color:var(--dim2);cursor:default}
+  .ghost{background:transparent;color:var(--dim);border:1px solid var(--line);
+    border-radius:8px;padding:6px 11px;font-size:12px}
+  .ghost:hover{color:var(--tx);border-color:#39404a}
+
+  .sites{display:flex;gap:6px;flex-wrap:wrap;margin:11px 2px 0}
+  .sites span{font-size:11px;color:var(--dim2);background:var(--panel2);
+    border:1px solid var(--line);padding:3px 9px;border-radius:20px}
+
+  /* preview */
+  #preview{margin-top:16px;padding:15px;display:none;animation:in .25s ease}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .prow{display:flex;gap:14px}
+  .thumb{width:132px;height:76px;border-radius:9px;object-fit:cover;flex:none;
+    background:var(--panel2);border:1px solid var(--line)}
+  .meta{min-width:0;flex:1}
+  .ptitle{font-size:14.5px;font-weight:600;line-height:1.35;margin-bottom:5px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pmeta{font-size:12px;color:var(--dim);display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .tag{background:rgba(91,140,255,.14);color:var(--acc2);padding:2px 8px;
+    border-radius:5px;font-size:11px;font-weight:600}
+  .dot{color:var(--dim2)}
+
+  .opts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .chip{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    border-radius:7px;padding:6px 12px;font-size:12.5px;font-weight:500}
+  .chip:hover{color:var(--tx)}
+  .chip.on{background:rgba(91,140,255,.16);border-color:#3a4a75;color:var(--acc2)}
+  .spacer{flex:1}
+
+  /* advanced */
+  .adv{margin-top:11px;font-size:12px}
+  .adv summary{color:var(--dim2);cursor:pointer;list-style:none;user-select:none;
+    display:inline-flex;align-items:center;gap:5px}
+  .adv summary::-webkit-details-marker{display:none}
+  .adv summary::before{content:"›";display:inline-block;transition:.2s;font-size:14px}
+  .adv[open] summary::before{transform:rotate(90deg)}
+  .adv summary:hover{color:var(--dim)}
+  .advbody{margin-top:11px;padding:12px;background:var(--panel2);
+    border:1px solid var(--line);border-radius:10px;display:flex;
+    gap:14px;flex-wrap:wrap;align-items:center}
+  label.f{display:flex;align-items:center;gap:7px;color:var(--dim);font-size:12.5px}
+  select{background:var(--panel);border:1px solid var(--line);color:var(--tx);
+    border-radius:7px;padding:5px 8px;font-family:inherit;font-size:12.5px;outline:0}
+  input[type=checkbox]{accent-color:var(--acc);width:14px;height:14px}
+  .hint{font-size:11.5px;color:var(--dim2);width:100%;line-height:1.5}
+
+  .msg{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:12.5px;
+    display:none;line-height:1.5}
+  .msg.err{display:block;background:rgba(255,107,107,.09);
+    border:1px solid rgba(255,107,107,.25);color:#ffa7a7}
+  .msg.info{display:block;background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
+
+  /* queue */
+  h2{font-size:12px;font-weight:600;color:var(--dim2);text-transform:uppercase;
+    letter-spacing:.7px;margin:32px 2px 11px;display:flex;align-items:center;gap:9px}
+  h2 .spacer{flex:1}
+  .job{padding:13px 15px;margin-bottom:8px;display:flex;gap:12px;align-items:center}
+  .jt{min-width:0;flex:1}
+  .jname{font-size:13.5px;font-weight:550;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;margin-bottom:3px}
+  .jsub{font-size:11.5px;color:var(--dim2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .prog{height:3px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:8px}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),#a06bff);
+    border-radius:3px;transition:width .35s ease}
+  .st{font-size:11px;font-weight:650;padding:3px 9px;border-radius:20px;flex:none}
+  .st.done{background:rgba(62,207,142,.13);color:var(--ok)}
+  .st.error{background:rgba(255,107,107,.13);color:var(--err)}
+  .st.run{background:rgba(91,140,255,.14);color:var(--acc2)}
+  .jerr{color:#ffa7a7;font-size:11.5px;margin-top:5px;line-height:1.45}
+  .acts{display:flex;gap:6px;flex:none}
+  .empty{text-align:center;color:var(--dim2);font-size:13px;padding:34px 10px}
+  a{color:var(--acc2);text-decoration:none}
+  .spin{width:12px;height:12px;border:2px solid rgba(255,255,255,.15);
+    border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;flex:none}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media(max-width:560px){
+    .thumb{width:96px;height:56px}
+    .wrap{padding:28px 15px 70px}
+    .env{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2a1.5 1.5 0 0 1 1.5 1.5v9.4l3.4-3.4a1.5 1.5 0 1 1 2.2 2.2l-6 6a1.5 1.5 0 0 1-2.2 0l-6-6a1.5 1.5 0 1 1 2.2-2.2l3.4 3.4V3.5A1.5 1.5 0 0 1 12 2ZM4 19.5A1.5 1.5 0 0 1 5.5 18h13a1.5 1.5 0 0 1 0 3h-13A1.5 1.5 0 0 1 4 19.5Z"/></svg></div>
+    <div>
+      <h1>VidGrab</h1>
+      <div class="sub">Paste a link. Get the video.</div>
+    </div>
+    <div class="env">
+      <div>saving to <b id="dir">…</b></div>
+      <div id="ff"></div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <svg class="link" viewBox="0 0 24 24"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 1 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0Zm-3.5 4.9a4 4 0 0 1 0-5.7l2.8-2.8 1.4 1.4-2.8 2.8a2 2 0 0 0 2.8 2.8l2.8-2.8 1.4 1.4-2.8 2.8a4 4 0 0 1-5.6 0Zm4.2-9.9 2.8-2.8a4 4 0 0 1 5.7 5.7l-2.9 2.8-1.4-1.4 2.8-2.8a2 2 0 1 0-2.8-2.8l-2.8 2.8-1.4-1.5Z"/></svg>
+    <input id="url" placeholder="https://x.com/…  ·  instagram.com/reel/…  ·  youtube.com/watch?v=…"
+           autocomplete="off" spellcheck="false">
+    <button class="btn" id="go">Fetch</button>
+  </div>
+
+  <div class="sites">
+    <span>YouTube</span><span>X / Twitter</span><span>Instagram</span><span>TikTok</span>
+    <span>Reddit</span><span>Facebook</span><span>Vimeo</span><span>Twitch</span><span>+1800 more</span>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="card" id="preview">
+    <div class="prow">
+      <img class="thumb" id="pthumb" alt="">
+      <div class="meta">
+        <div class="ptitle" id="ptitle"></div>
+        <div class="pmeta" id="pmeta"></div>
+      </div>
+    </div>
+    <div class="opts">
+      <div class="chips" id="chips"></div>
+      <div class="spacer"></div>
+      <button class="btn" id="dl">Download</button>
+    </div>
+  </div>
+
+  <details class="adv">
+    <summary>Advanced</summary>
+    <div class="advbody">
+      <label class="f">Use cookies from
+        <select id="cookies">
+          <option value="none">None</option>
+          <option value="chrome">Chrome</option>
+          <option value="safari">Safari</option>
+          <option value="firefox">Firefox</option>
+          <option value="brave">Brave</option>
+          <option value="edge">Edge</option>
+        </select>
+      </label>
+      <label class="f"><input type="checkbox" id="subs"> Save subtitles</label>
+      <div class="hint">Private or age-restricted posts, and most of Instagram, need you to be
+        signed in — pick the browser where you're logged in and VidGrab borrows that session.
+        Quit that browser first if macOS blocks the cookie read.</div>
+    </div>
+  </details>
+
+  <h2>Downloads <span class="spacer"></span>
+    <button class="ghost" id="openfolder">Open folder</button>
+    <button class="ghost" id="clear">Clear</button>
+  </h2>
+  <div id="queue"><div class="empty">Nothing yet.</div></div>
+
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let info = null, quality = 'best', pollTimer = null;
+
+const fmtSize = b => !b ? '' : b > 1e9 ? (b/1e9).toFixed(2)+' GB' : (b/1e6).toFixed(1)+' MB';
+const fmtDur = s => { if(!s) return ''; s=Math.round(s);
+  const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+  return (h? h+':'+String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0'); };
+const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function say(text, kind='err'){ const m=$('#msg'); m.className='msg '+(text?kind:''); m.textContent=text||''; }
+
+async function api(path, body){
+  const r = await fetch(path, body ? {method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)} : {method: path.includes('clear')||path.includes('reveal')?'POST':'GET'});
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.detail || 'Request failed');
+  return j;
+}
+
+/* ---- fetch metadata ---- */
+async function fetchInfo(){
+  const url = $('#url').value.trim();
+  if(!url) return;
+  say(''); $('#preview').style.display='none';
+  $('#go').disabled = true; $('#go').textContent = 'Fetching…';
+  try{
+    info = await api('/api/probe', {url, cookies:$('#cookies').value});
+    render();
+  }catch(e){ say(e.message); }
+  finally{ $('#go').disabled=false; $('#go').textContent='Fetch'; }
+}
+
+function render(){
+  $('#preview').style.display='block';
+  $('#pthumb').src = info.thumbnail || '';
+  $('#pthumb').style.display = info.thumbnail ? 'block' : 'none';
+  $('#ptitle').textContent = info.title;
+
+  const bits = [`<span class="tag">${esc(info.platform)}</span>`];
+  if(info.kind === 'playlist') bits.push(`${info.count} items`);
+  else{
+    if(info.uploader) bits.push(esc(info.uploader));
+    if(info.duration) bits.push('<span class="dot">·</span>', fmtDur(info.duration));
+    if(info.is_live)  bits.push('<span class="dot">·</span>', 'LIVE');
+  }
+  $('#pmeta').innerHTML = bits.join(' ');
+
+  const opts = [['best','Best']];
+  (info.heights || []).filter(h => h <= 2160).slice(0,4)
+    .forEach(h => opts.push([h+'p', h+'p']));
+  opts.push(['audio','Audio only']);
+  quality = 'best';
+  $('#chips').innerHTML = opts.map(([v,l]) =>
+    `<button class="chip${v==='best'?' on':''}" data-q="${v}">${l}</button>`).join('');
+  $('#chips').querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    quality = c.dataset.q;
+    $('#chips').querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x===c));
+  });
+  $('#dl').textContent = info.kind==='playlist' ? `Download all ${info.count}` : 'Download';
+}
+
+/* ---- start download ---- */
+async function start(){
+  try{
+    await api('/api/download', {url:$('#url').value.trim(), quality,
+      cookies:$('#cookies').value, subtitles:$('#subs').checked});
+    $('#preview').style.display='none'; $('#url').value=''; info=null; say('');
+    poll();
+  }catch(e){ say(e.message); }
+}
+
+/* ---- queue ---- */
+function jobRow(j){
+  const running = j.status==='downloading' || j.status==='queued' || j.status==='processing';
+  const label = {queued:'Queued', downloading:'Downloading', processing:'Processing',
+                 done:'Done', error:'Failed'}[j.status];
+  const cls = j.status==='done'?'done' : j.status==='error'?'error' : 'run';
+  let sub = [`<span class="tag">${esc(j.platform)}</span>`];
+  if(j.status==='downloading'){
+    sub.push(`${j.percent}%`);
+    if(j.size) sub.push('<span class="dot">·</span>', fmtSize(j.size));
+    if(j.speed) sub.push('<span class="dot">·</span>', fmtSize(j.speed)+'/s');
+    if(j.eta)   sub.push('<span class="dot">·</span>', fmtDur(j.eta)+' left');
+  } else if(j.status==='done'){
+    if(j.count) sub.push(`${j.count} files`);
+    else if(j.size) sub.push(fmtSize(j.size));
+    sub.push('<span class="dot">·</span>', esc(j.quality==='audio'?'mp3':j.quality));
+  }
+  return `<div class="card job">
+    <div class="jt">
+      <div class="jname">${esc(j.title || j.url)}</div>
+      <div class="jsub">${sub.join(' ')}</div>
+      ${running && j.status!=='queued' ? `<div class="prog"><i style="width:${j.percent}%"></i></div>` : ''}
+      ${j.error ? `<div class="jerr">${esc(j.error)}</div>` : ''}
+    </div>
+    ${running ? '<div class="spin"></div>' : ''}
+    <span class="st ${cls}">${label}</span>
+    ${j.status==='done' ? `<div class="acts">
+        <button class="ghost" data-reveal="${j.id}">Show</button>
+        ${j.filename ? `<a class="ghost" style="display:inline-block" href="/api/file/${j.id}">Save</a>` : ''}
+      </div>` : ''}
+  </div>`;
+}
+
+async function poll(){
+  clearTimeout(pollTimer);
+  try{
+    const d = await api('/api/jobs');
+    $('#dir').textContent = d.dir.replace(/^\/Users\/[^/]+/, '~');
+    $('#ff').innerHTML = d.ffmpeg ? '' : '⚠ no ffmpeg — <b>brew install ffmpeg</b>';
+    $('#queue').innerHTML = d.jobs.length
+      ? d.jobs.map(jobRow).join('')
+      : '<div class="empty">Nothing yet.</div>';
+    $('#queue').querySelectorAll('[data-reveal]').forEach(b =>
+      b.onclick = () => api('/api/reveal/' + b.dataset.reveal, {}));
+    const busy = d.jobs.some(j => ['queued','downloading','processing'].includes(j.status));
+    pollTimer = setTimeout(poll, busy ? 600 : 4000);
+  }catch(e){ pollTimer = setTimeout(poll, 3000); }
+}
+
+$('#go').onclick = fetchInfo;
+$('#dl').onclick = start;
+$('#url').onkeydown = e => { if(e.key==='Enter') info ? start() : fetchInfo(); };
+$('#url').addEventListener('paste', () => setTimeout(fetchInfo, 60));
+$('#clear').onclick = async () => { await api('/api/clear', {}); poll(); };
+$('#openfolder').onclick = () => api('/api/reveal/none', {});
+poll();
+</script>
+</body>
+</html>
