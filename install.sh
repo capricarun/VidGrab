@@ -65,6 +65,30 @@ fi
 
 chmod +x launch.sh run.sh VidGrab.command 2>/dev/null || true
 
+# ---- 4b. GitHub remote (for the permanent launcher link) ----------------
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  git init -q && git add -A && git commit -q -m "VidGrab" || true
+fi
+if ! git remote get-url origin >/dev/null 2>&1; then
+  echo
+  echo "  VidGrab publishes its current address to a GitHub Pages page so your"
+  echo "  bookmark keeps working. Create an empty repo named 'vidgrab' at"
+  echo "  https://github.com/new  then paste its URL here."
+  echo "  (Press Enter to skip — everything else still works, you'll just use"
+  echo "   the raw tunnel address instead of a permanent link.)"
+  echo
+  read -r -p "  Repo URL: " REPO
+  if [ -n "$REPO" ]; then
+    git remote add origin "$REPO"
+    git branch -M main
+    if git push -u origin main; then
+      echo "  · pushed. Now enable Pages: Settings → Pages → Source: main, folder: /docs"
+    else
+      echo "  ⚠  push failed — check your GitHub credentials, then: git push -u origin main"
+    fi
+  fi
+fi
+
 # ---- 5. auto-start at login --------------------------------------------
 mkdir -p "$HOME/Library/LaunchAgents"
 cat > "$PLIST" <<PLISTEOF
